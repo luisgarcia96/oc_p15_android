@@ -27,7 +27,6 @@ import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.PersonOutline
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.SwapVert
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,6 +49,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.eventorias.R
 import com.example.eventorias.auth.AuthUiState
+import com.example.eventorias.ui.components.EventoriasPrimaryButton
+import com.example.eventorias.ui.components.EventoriasSquareIconButton
 import com.example.eventorias.ui.theme.EventoriasBackground
 import com.example.eventorias.ui.theme.EventoriasDivider
 import com.example.eventorias.ui.theme.EventoriasOnPrimary
@@ -65,6 +66,11 @@ private enum class HomeTab {
   Profile
 }
 
+private enum class EventsScreenMode {
+  Home,
+  CreateEvent
+}
+
 @Composable
 fun EventsHomeScreen(
   uiState: AuthUiState,
@@ -72,33 +78,33 @@ fun EventsHomeScreen(
   onAddEventClick: () -> Unit = {}
 ) {
   var selectedTab by remember { mutableStateOf(HomeTab.Events) }
+  var screenMode by remember { mutableStateOf(EventsScreenMode.Home) }
 
   Scaffold(
     contentWindowInsets = WindowInsets.safeDrawing,
     containerColor = EventoriasBackground,
     floatingActionButton = {
-      if (selectedTab == HomeTab.Events) {
-        FloatingActionButton(
-          onClick = onAddEventClick,
-          shape = RoundedCornerShape(22.dp),
-          containerColor = EventoriasPrimary,
-          contentColor = EventoriasOnPrimary
-        ) {
-          Icon(
-            imageVector = Icons.Outlined.Add,
-            contentDescription = stringResource(R.string.add_event)
-          )
-        }
+      if (screenMode == EventsScreenMode.Home && selectedTab == HomeTab.Events) {
+        EventoriasSquareIconButton(
+          onClick = {
+            onAddEventClick()
+            screenMode = EventsScreenMode.CreateEvent
+          },
+          icon = Icons.Outlined.Add,
+          contentDescription = stringResource(R.string.add_event)
+        )
       }
     },
     bottomBar = {
-      HomeBottomBar(
-        selectedTab = selectedTab,
-        onSelectTab = { selectedTab = it }
-      )
+      if (screenMode == EventsScreenMode.Home) {
+        HomeBottomBar(
+          selectedTab = selectedTab,
+          onSelectTab = { selectedTab = it }
+        )
+      }
     }
   ) { innerPadding ->
-    Column(
+    Box(
       modifier = Modifier
         .fillMaxSize()
         .background(
@@ -111,17 +117,28 @@ fun EventsHomeScreen(
           )
         )
         .padding(innerPadding)
-        .statusBarsPadding()
-        .navigationBarsPadding()
-        .padding(horizontal = 20.dp)
     ) {
-      HomeHeader(selectedTab = selectedTab)
-      when (selectedTab) {
-        HomeTab.Events -> EventsTabContent()
-        HomeTab.Profile -> ProfileTabContent(
-          uiState = uiState,
-          onSignOut = onSignOut
+      if (screenMode == EventsScreenMode.CreateEvent) {
+        CreateEventScreen(
+          onBack = { screenMode = EventsScreenMode.Home }
         )
+      } else {
+        Column(
+          modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .padding(horizontal = 20.dp)
+        ) {
+          HomeHeader(selectedTab = selectedTab)
+          when (selectedTab) {
+            HomeTab.Events -> EventsTabContent()
+            HomeTab.Profile -> ProfileTabContent(
+              uiState = uiState,
+              onSignOut = onSignOut
+            )
+          }
+        }
       }
     }
   }
@@ -218,30 +235,11 @@ private fun ProfileTabContent(
         color = EventoriasOnSurfaceMuted
       )
       Spacer(modifier = Modifier.height(24.dp))
-      Surface(
-        modifier = Modifier
-          .fillMaxWidth()
-          .clickable(onClick = onSignOut),
-        shape = RoundedCornerShape(12.dp),
-        color = EventoriasPrimary
-      ) {
-        Row(
-          modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-          Icon(
-            imageVector = Icons.AutoMirrored.Outlined.Logout,
-            contentDescription = null,
-            tint = EventoriasOnPrimary
-          )
-          Text(
-            text = stringResource(R.string.sign_out_cta),
-            style = MaterialTheme.typography.labelLarge,
-            color = EventoriasOnPrimary
-          )
-        }
-      }
+      EventoriasPrimaryButton(
+        text = stringResource(R.string.sign_out_cta),
+        onClick = onSignOut,
+        modifier = Modifier.fillMaxWidth()
+      )
     }
   }
 }

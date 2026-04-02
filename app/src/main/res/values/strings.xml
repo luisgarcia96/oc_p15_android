@@ -31,6 +31,15 @@
     <string name="search_events">Search events</string>
     <string name="sort_events">Sort events</string>
     <string name="add_event">Add event</string>
+    <string name="create_event_title">Creation of an event</string>
+    <string name="event_title_label">Title</string>
+    <string name="event_description_label">Description</string>
+    <string name="event_date_label">Date</string>
+    <string name="event_time_label">Time</string>
+    <string name="event_address_label">Address</string>
+    <string name="add_event_photo">Add photo</string>
+    <string name="add_event_attachment">Add attachment</string>
+    <string name="validate_event">Validate</string>
     <string name="no_events_title">No events yet</string>
     <string name="no_events_message">Your event feed is empty for now. Create your first event to get started.</string>
     <string name="profile_title">Profile</string>
