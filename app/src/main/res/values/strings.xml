@@ -25,4 +25,16 @@
     <string name="google_action_label">Continue with Google</string>
     <string name="email_auth_mode_sign_in">Sign in</string>
     <string name="email_auth_mode_sign_up">Create account</string>
+    <string name="events_tab">Events</string>
+    <string name="profile_tab">Profile</string>
+    <string name="event_list_title">Event list</string>
+    <string name="search_events">Search events</string>
+    <string name="sort_events">Sort events</string>
+    <string name="add_event">Add event</string>
+    <string name="no_events_title">No events yet</string>
+    <string name="no_events_message">Your event feed is empty for now. Create your first event to get started.</string>
+    <string name="profile_title">Profile</string>
+    <string name="profile_subtitle">Signed in as %1$s</string>
+    <string name="profile_placeholder_user">Your account</string>
+    <string name="sign_out_cta">Sign out</string>
 </resources>

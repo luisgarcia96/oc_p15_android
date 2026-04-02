@@ -14,7 +14,7 @@ import com.example.eventorias.auth.AuthRoute
 import com.example.eventorias.auth.AuthViewModel
 import com.example.eventorias.ui.auth.EmailAuthScreen
 import com.example.eventorias.ui.auth.LoginScreen
-import com.example.eventorias.ui.auth.SignedInScreen
+import com.example.eventorias.ui.events.EventsHomeScreen
 import com.example.eventorias.ui.theme.EventoriasTheme
 
 class MainActivity : ComponentActivity() {
@@ -47,7 +47,7 @@ class MainActivity : ComponentActivity() {
             onToggleMode = viewModel::toggleEmailAuthMode
           )
 
-          AuthRoute.SignedIn -> SignedInScreen(
+          AuthRoute.SignedIn -> EventsHomeScreen(
             uiState = uiState,
             onSignOut = viewModel::signOut
           )
