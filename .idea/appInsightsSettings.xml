@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.example.eventorias" />
+                  <option name="mobileSdkAppId" value="1:912061484700:android:25308b2c4d8ff67933e759" />
+                  <option name="projectId" value="eventorias-bb198" />
+                  <option name="projectNumber" value="912061484700" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
