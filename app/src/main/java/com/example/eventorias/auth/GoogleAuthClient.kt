@@ -9,6 +9,7 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 
@@ -22,7 +23,7 @@ class GoogleAuthClient(
       getGoogleIdToken(activity, filterByAuthorizedAccounts = true)
     }.getOrElse { throwable ->
       if (throwable is NoCredentialException) {
-        getGoogleIdToken(activity, filterByAuthorizedAccounts = false)
+        getGoogleIdTokenFromButtonFlow(activity)
       } else {
         throw throwable
       }
@@ -53,6 +54,32 @@ class GoogleAuthClient(
 
     val request = GetCredentialRequest.Builder()
       .addCredentialOption(googleIdOption)
+      .build()
+
+    val result = credentialManager.getCredential(
+      context = activity,
+      request = request
+    )
+
+    val credential = result.credential
+    if (credential is CustomCredential &&
+      credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+    ) {
+      return GoogleIdTokenCredential.createFrom(credential.data).idToken
+    }
+
+    error("Unexpected credential type returned from Google sign-in.")
+  }
+
+  private suspend fun getGoogleIdTokenFromButtonFlow(
+    activity: ComponentActivity
+  ): String {
+    val signInWithGoogleOption = GetSignInWithGoogleOption.Builder(
+      serverClientId = appContext.lookupWebClientId()
+    ).build()
+
+    val request = GetCredentialRequest.Builder()
+      .addCredentialOption(signInWithGoogleOption)
       .build()
 
     val result = credentialManager.getCredential(
