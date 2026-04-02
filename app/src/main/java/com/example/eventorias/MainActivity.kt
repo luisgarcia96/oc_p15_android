@@ -4,13 +4,16 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.eventorias.auth.AuthRoute
+import com.example.eventorias.auth.AuthViewModel
+import com.example.eventorias.ui.auth.EmailAuthScreen
+import com.example.eventorias.ui.auth.LoginScreen
+import com.example.eventorias.ui.auth.SignedInScreen
 import com.example.eventorias.ui.theme.EventoriasTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,29 +22,33 @@ class MainActivity : ComponentActivity() {
     enableEdgeToEdge()
     setContent {
       EventoriasTheme {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-          Greeting(
-            name = "Android",
-            modifier = Modifier.padding(innerPadding)
+        val viewModel: AuthViewModel = viewModel()
+        val uiState by viewModel.uiState.collectAsState()
+        val context = LocalContext.current
+        val activity = remember(context) { context as? ComponentActivity }
+
+        when (uiState.currentRoute) {
+          AuthRoute.Login -> LoginScreen(
+            uiState = uiState,
+            onGoogleClick = { activity?.let(viewModel::signInWithGoogle) },
+            onEmailClick = viewModel::openEmailAuth
+          )
+
+          AuthRoute.EmailAuth -> EmailAuthScreen(
+            uiState = uiState,
+            onBack = viewModel::backToLogin,
+            onEmailChanged = viewModel::updateEmail,
+            onPasswordChanged = viewModel::updatePassword,
+            onSubmit = viewModel::submitEmailAuth,
+            onToggleMode = viewModel::toggleEmailAuthMode
+          )
+
+          AuthRoute.SignedIn -> SignedInScreen(
+            uiState = uiState,
+            onSignOut = viewModel::signOut
           )
         }
       }
     }
-  }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-  Text(
-    text = "Hello $name!",
-    modifier = modifier
-  )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-  EventoriasTheme {
-    Greeting("Android")
   }
 }
