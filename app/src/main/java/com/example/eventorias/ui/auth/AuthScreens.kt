@@ -1,9 +1,6 @@
 package com.example.eventorias.ui.auth
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -25,9 +22,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.Image
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -47,17 +44,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.eventorias.R
 import com.example.eventorias.auth.AuthAction
 import com.example.eventorias.auth.AuthUiState
 import com.example.eventorias.auth.EmailAuthMode
@@ -70,10 +67,7 @@ import com.example.eventorias.ui.theme.EventoriasOnSurface
 import com.example.eventorias.ui.theme.EventoriasOnSurfaceMuted
 import com.example.eventorias.ui.theme.EventoriasPrimary
 import com.example.eventorias.ui.theme.EventoriasSurface
-import com.example.eventorias.ui.theme.GoogleBlue
-import com.example.eventorias.ui.theme.GoogleGreen
-import com.example.eventorias.ui.theme.GoogleRed
-import com.example.eventorias.ui.theme.GoogleYellow
+import com.example.eventorias.ui.theme.EventoriasTheme
 
 @Composable
 fun LoginScreen(
@@ -85,7 +79,7 @@ fun LoginScreen(
     Column(
       modifier = Modifier
         .fillMaxSize()
-        .padding(horizontal = 28.dp),
+        .padding(horizontal = 72.dp),
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.Center
     ) {
@@ -188,7 +182,7 @@ fun EmailAuthScreen(
         modifier = Modifier
           .fillMaxWidth()
           .height(58.dp),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(4.dp),
         colors = ButtonDefaults.buttonColors(
           containerColor = EventoriasPrimary,
           contentColor = EventoriasOnPrimary,
@@ -330,68 +324,15 @@ private fun AuthScaffold(content: @Composable () -> Unit) {
 
 @Composable
 private fun BrandHeader(compact: Boolean = false) {
-  Column(horizontalAlignment = Alignment.CenterHorizontally) {
-    PlaceholderLogo(compact = compact)
-    Spacer(modifier = Modifier.height(if (compact) 20.dp else 28.dp))
-    Text(
-      text = "EVENTORIAS",
-      style = MaterialTheme.typography.displayMedium.copy(
-        fontSize = if (compact) 26.sp else 34.sp
-      ),
-      color = EventoriasOnSurface
-    )
-  }
-}
-
-@Composable
-private fun PlaceholderLogo(compact: Boolean) {
-  val size = if (compact) 88.dp else 112.dp
-  Box(
-    modifier = Modifier
-      .size(size)
-      .clip(CircleShape)
-      .border(
-        border = BorderStroke(1.2.dp, EventoriasDivider),
-        shape = CircleShape
-      )
-      .background(EventoriasSurface.copy(alpha = 0.32f)),
-    contentAlignment = Alignment.Center
-  ) {
-    Canvas(modifier = Modifier.size(if (compact) 42.dp else 56.dp)) {
-      val canvasSize = minOf(this.size.width, this.size.height)
-      val stroke = canvasSize / 12f
-      drawCircle(
-        color = EventoriasOnSurface,
-        radius = canvasSize * 0.28f,
-        style = androidx.compose.ui.graphics.drawscope.Stroke(width = stroke)
-      )
-      drawCircle(
-        color = EventoriasBackground,
-        radius = canvasSize * 0.18f,
-        center = Offset(this.size.width * 0.57f, this.size.height * 0.43f)
-      )
-      val rayColor = EventoriasOnSurface
-      val center = Offset(this.size.width / 2f, this.size.height / 2f)
-      repeat(8) { index ->
-        val angle = Math.toRadians((index * 45.0) - 90.0)
-        val start = Offset(
-          x = center.x + kotlin.math.cos(angle).toFloat() * canvasSize * 0.36f,
-          y = center.y + kotlin.math.sin(angle).toFloat() * canvasSize * 0.36f
-        )
-        val end = Offset(
-          x = center.x + kotlin.math.cos(angle).toFloat() * canvasSize * 0.48f,
-          y = center.y + kotlin.math.sin(angle).toFloat() * canvasSize * 0.48f
-        )
-        drawLine(
-          color = rayColor,
-          start = start,
-          end = end,
-          strokeWidth = stroke * 0.72f,
-          cap = StrokeCap.Round
-        )
-      }
-    }
-  }
+  Image(
+    painter = painterResource(id = R.drawable.eventorias_logo),
+    contentDescription = null,
+    modifier = Modifier.size(
+      width = if (compact) 220.dp else 280.dp,
+      height = if (compact) 140.dp else 176.dp
+    ),
+    contentScale = ContentScale.Fit
+  )
 }
 
 @Composable
@@ -406,7 +347,7 @@ private fun GoogleButton(
     modifier = Modifier
       .fillMaxWidth()
       .height(58.dp),
-    shape = RoundedCornerShape(14.dp),
+    shape = RoundedCornerShape(4.dp),
     colors = ButtonDefaults.buttonColors(
       containerColor = EventoriasCard,
       contentColor = EventoriasCardText,
@@ -414,7 +355,12 @@ private fun GoogleButton(
       disabledContentColor = EventoriasCardText.copy(alpha = 0.7f)
     )
   ) {
-    GoogleGlyph()
+    Image(
+      painter = painterResource(id = R.drawable.google_icon),
+      contentDescription = null,
+      modifier = Modifier.size(24.dp),
+      contentScale = ContentScale.Fit
+    )
     Spacer(modifier = Modifier.size(14.dp))
     if (loading) {
       CircularProgressIndicator(
@@ -442,53 +388,23 @@ private fun EmailButton(
     modifier = Modifier
       .fillMaxWidth()
       .height(58.dp),
-    shape = RoundedCornerShape(14.dp),
+    shape = RoundedCornerShape(4.dp),
     colors = ButtonDefaults.buttonColors(
       containerColor = EventoriasPrimary,
       contentColor = EventoriasOnPrimary,
       disabledContainerColor = EventoriasPrimary.copy(alpha = 0.45f)
     )
   ) {
-    Icon(
-      imageVector = Icons.Rounded.Email,
-      contentDescription = null
+    Image(
+      painter = painterResource(id = R.drawable.paper_letter_icon),
+      contentDescription = null,
+      modifier = Modifier.size(24.dp),
+      contentScale = ContentScale.Fit
     )
     Spacer(modifier = Modifier.size(14.dp))
     Text(
       text = "Sign in with email",
       style = MaterialTheme.typography.labelLarge
-    )
-  }
-}
-
-@Composable
-private fun GoogleGlyph() {
-  Row(
-    horizontalArrangement = Arrangement.spacedBy(1.dp),
-    verticalAlignment = Alignment.CenterVertically
-  ) {
-    Text(
-      text = "G",
-      color = GoogleBlue,
-      style = MaterialTheme.typography.titleLarge.copy(
-        fontWeight = FontWeight.Bold,
-        fontFamily = FontFamily.SansSerif
-      )
-    )
-    Box(
-      modifier = Modifier
-        .size(width = 4.dp, height = 4.dp)
-        .background(GoogleRed, CircleShape)
-    )
-    Box(
-      modifier = Modifier
-        .size(width = 4.dp, height = 4.dp)
-        .background(GoogleYellow, CircleShape)
-    )
-    Box(
-      modifier = Modifier
-        .size(width = 4.dp, height = 4.dp)
-        .background(GoogleGreen, CircleShape)
     )
   }
 }
@@ -503,7 +419,7 @@ private fun ModeToggle(
   Row(
     modifier = Modifier
       .fillMaxWidth()
-      .clip(RoundedCornerShape(18.dp))
+      .clip(RoundedCornerShape(4.dp))
       .background(EventoriasSurface)
       .padding(6.dp),
     horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -538,7 +454,7 @@ private fun ModeOption(
 ) {
   Box(
     modifier = modifier
-      .clip(RoundedCornerShape(14.dp))
+      .clip(RoundedCornerShape(4.dp))
       .background(if (selected) EventoriasPrimary else Color.Transparent)
       .clickable(
         enabled = enabled,
@@ -594,7 +510,7 @@ private fun AuthTextField(
       unfocusedIndicatorColor = EventoriasDivider,
       cursorColor = EventoriasPrimary
     ),
-    shape = RoundedCornerShape(18.dp)
+    shape = RoundedCornerShape(4.dp)
   )
 }
 
@@ -610,7 +526,7 @@ private fun AuthError(
   Spacer(modifier = Modifier.height(topPadding))
   Surface(
     color = EventoriasPrimary.copy(alpha = 0.12f),
-    shape = RoundedCornerShape(16.dp),
+    shape = RoundedCornerShape(4.dp),
     modifier = Modifier.fillMaxWidth()
   ) {
     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
@@ -628,5 +544,84 @@ private fun AuthError(
         color = EventoriasOnSurfaceMuted
       )
     }
+  }
+}
+
+@Preview(name = "Login", showBackground = true, backgroundColor = 0xFF1E1A20)
+@Composable
+private fun LoginScreenPreview() {
+  EventoriasTheme {
+    LoginScreen(
+      uiState = AuthUiState(),
+      onGoogleClick = {},
+      onEmailClick = {}
+    )
+  }
+}
+
+@Preview(name = "Login Loading", showBackground = true, backgroundColor = 0xFF1E1A20)
+@Composable
+private fun LoginScreenLoadingPreview() {
+  EventoriasTheme {
+    LoginScreen(
+      uiState = AuthUiState(
+        isLoading = true,
+        inFlightAction = AuthAction.GOOGLE
+      ),
+      onGoogleClick = {},
+      onEmailClick = {}
+    )
+  }
+}
+
+@Preview(name = "Email Auth", showBackground = true, backgroundColor = 0xFF1E1A20)
+@Composable
+private fun EmailAuthScreenPreview() {
+  EventoriasTheme {
+    EmailAuthScreen(
+      uiState = AuthUiState(
+        currentRoute = com.example.eventorias.auth.AuthRoute.EmailAuth,
+        email = "hello@eventorias.com",
+        password = "secret123",
+        emailAuthMode = EmailAuthMode.SIGN_IN
+      ),
+      onBack = {},
+      onEmailChanged = {},
+      onPasswordChanged = {},
+      onSubmit = {},
+      onToggleMode = {}
+    )
+  }
+}
+
+@Preview(name = "Email Auth Error", showBackground = true, backgroundColor = 0xFF1E1A20)
+@Composable
+private fun EmailAuthErrorPreview() {
+  EventoriasTheme {
+    EmailAuthScreen(
+      uiState = AuthUiState(
+        currentRoute = com.example.eventorias.auth.AuthRoute.EmailAuth,
+        email = "hello@eventorias.com",
+        password = "123",
+        emailAuthMode = EmailAuthMode.SIGN_UP,
+        errorMessage = "Password must be at least 6 characters."
+      ),
+      onBack = {},
+      onEmailChanged = {},
+      onPasswordChanged = {},
+      onSubmit = {},
+      onToggleMode = {}
+    )
+  }
+}
+
+@Preview(name = "Signed In", showBackground = true, backgroundColor = 0xFF1E1A20)
+@Composable
+private fun SignedInScreenPreview() {
+  EventoriasTheme {
+    SignedInScreen(
+      uiState = AuthUiState(),
+      onSignOut = {}
+    )
   }
 }
