@@ -47,6 +47,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.material3.Switch
+import androidx.compose.material3.TextField
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -69,7 +73,6 @@ import com.example.eventorias.events.EventsListViewModel
 import com.example.eventorias.ui.components.EventoriasPrimaryButton
 import com.example.eventorias.ui.components.EventoriasSquareIconButton
 import com.example.eventorias.ui.theme.EventoriasBackground
-import com.example.eventorias.ui.theme.EventoriasDivider
 import com.example.eventorias.ui.theme.EventoriasOnPrimary
 import com.example.eventorias.ui.theme.EventoriasOnSurface
 import com.example.eventorias.ui.theme.EventoriasOnSurfaceMuted
@@ -192,7 +195,10 @@ fun EventsHomeScreen(
             .navigationBarsPadding()
             .padding(horizontal = 20.dp)
         ) {
-          HomeHeader(selectedTab = selectedTab)
+          HomeHeader(
+            selectedTab = selectedTab,
+            photoUrl = uiState.currentUser?.photoUrl?.toString()
+          )
           when (selectedTab) {
             HomeTab.Events -> EventsTabContent(
               uiState = eventsListUiState,
@@ -345,58 +351,79 @@ private fun ProfileTabContent(
   uiState: AuthUiState,
   onSignOut: () -> Unit
 ) {
-  val userLabel = uiState.currentUser?.email
-    ?: uiState.currentUser?.displayName
-    ?: stringResource(R.string.profile_placeholder_user)
+  val displayName = uiState.currentUser?.displayName.orEmpty()
+  val email = uiState.currentUser?.email.orEmpty()
+  var notificationsEnabled by remember { mutableStateOf(true) }
 
   Spacer(modifier = Modifier.height(24.dp))
 
-  Surface(
-    modifier = Modifier.fillMaxWidth(),
-    shape = RoundedCornerShape(24.dp),
-    color = EventoriasSurface
-  ) {
-    Column(
-      modifier = Modifier.padding(horizontal = 22.dp, vertical = 24.dp)
+  Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+    ProfileInfoField(label = stringResource(R.string.profile_field_name), value = displayName, enabled = false)
+    ProfileInfoField(label = stringResource(R.string.profile_field_email), value = email, enabled = false)
+
+    Surface(
+      modifier = Modifier.fillMaxWidth(),
+      shape = RoundedCornerShape(4.dp),
+      color = EventoriasSurface
     ) {
-      Box(
+      Row(
         modifier = Modifier
-          .size(68.dp)
-          .background(EventoriasSurfaceMuted, CircleShape),
-        contentAlignment = Alignment.Center
+          .fillMaxWidth()
+          .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
       ) {
-        Icon(
-          imageVector = Icons.Outlined.AccountCircle,
-          contentDescription = null,
-          tint = EventoriasOnSurface,
-          modifier = Modifier.size(40.dp)
+        Switch(
+          checked = notificationsEnabled,
+          onCheckedChange = { notificationsEnabled = it },
+          colors = SwitchDefaults.colors(
+            checkedTrackColor = EventoriasPrimary,
+            checkedThumbColor = Color.White
+          )
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+          text = stringResource(R.string.profile_notifications),
+          style = MaterialTheme.typography.bodyLarge,
+          color = EventoriasOnSurface
         )
       }
-      Spacer(modifier = Modifier.height(18.dp))
-      Text(
-        text = userLabel,
-        style = MaterialTheme.typography.titleLarge,
-        color = EventoriasOnSurface
-      )
-      Spacer(modifier = Modifier.height(8.dp))
-      Text(
-        text = stringResource(R.string.profile_subtitle, userLabel),
-        style = MaterialTheme.typography.bodyMedium,
-        color = EventoriasOnSurfaceMuted
-      )
-      Spacer(modifier = Modifier.height(24.dp))
-      EventoriasPrimaryButton(
-        text = stringResource(R.string.sign_out_cta),
-        onClick = onSignOut,
-        modifier = Modifier.fillMaxWidth()
-      )
     }
   }
 }
 
 @Composable
+private fun ProfileInfoField(label: String, value: String, enabled: Boolean = true) {
+  TextField(
+    value = value,
+    onValueChange = {},
+    label = { Text(label) },
+    enabled = enabled,
+    singleLine = true,
+    modifier = Modifier.fillMaxWidth(),
+    colors = TextFieldDefaults.colors(
+      focusedContainerColor = EventoriasSurface,
+      unfocusedContainerColor = EventoriasSurface,
+      disabledContainerColor = EventoriasSurface,
+      focusedTextColor = EventoriasOnSurface,
+      unfocusedTextColor = EventoriasOnSurface,
+      disabledTextColor = EventoriasOnSurface.copy(alpha = 0.5f),
+      focusedLabelColor = EventoriasOnSurfaceMuted,
+      unfocusedLabelColor = EventoriasOnSurfaceMuted,
+      disabledLabelColor = EventoriasOnSurfaceMuted.copy(alpha = 0.5f),
+      focusedIndicatorColor = Color.Transparent,
+      unfocusedIndicatorColor = Color.Transparent,
+      disabledIndicatorColor = Color.Transparent,
+      cursorColor = EventoriasPrimary
+    ),
+    textStyle = MaterialTheme.typography.bodyLarge,
+    shape = RoundedCornerShape(4.dp)
+  )
+}
+
+@Composable
 private fun HomeHeader(
-  selectedTab: HomeTab
+  selectedTab: HomeTab,
+  photoUrl: String? = null
 ) {
   Spacer(modifier = Modifier.height(18.dp))
   Row(
@@ -417,8 +444,8 @@ private fun HomeHeader(
       modifier = Modifier.size(width = 96.dp, height = 48.dp),
       contentAlignment = Alignment.CenterEnd
     ) {
-      if (selectedTab == HomeTab.Events) {
-        Row(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
+      when (selectedTab) {
+        HomeTab.Events -> Row(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
           IconButton(onClick = {}) {
             Icon(
               imageVector = Icons.Outlined.Search,
@@ -431,6 +458,26 @@ private fun HomeHeader(
               imageVector = Icons.Outlined.SwapVert,
               contentDescription = stringResource(R.string.sort_events),
               tint = EventoriasOnSurface
+            )
+          }
+        }
+        HomeTab.Profile -> if (photoUrl != null) {
+          AsyncImage(
+            model = photoUrl,
+            contentDescription = null,
+            modifier = Modifier.size(44.dp).clip(CircleShape),
+            contentScale = ContentScale.Crop
+          )
+        } else {
+          Box(
+            modifier = Modifier.size(44.dp).background(EventoriasSurfaceMuted, CircleShape),
+            contentAlignment = Alignment.Center
+          ) {
+            Icon(
+              imageVector = Icons.Outlined.AccountCircle,
+              contentDescription = null,
+              tint = EventoriasOnSurface,
+              modifier = Modifier.size(28.dp)
             )
           }
         }

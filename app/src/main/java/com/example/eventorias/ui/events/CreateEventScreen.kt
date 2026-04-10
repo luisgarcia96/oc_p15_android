@@ -35,10 +35,10 @@ import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -59,7 +59,6 @@ import com.example.eventorias.ui.components.EventoriasLightSquareIconButton
 import com.example.eventorias.ui.components.EventoriasPrimaryButton
 import com.example.eventorias.ui.components.EventoriasSquareIconButton
 import com.example.eventorias.ui.theme.EventoriasBackground
-import com.example.eventorias.ui.theme.EventoriasDivider
 import com.example.eventorias.ui.theme.EventoriasOnSurface
 import com.example.eventorias.ui.theme.EventoriasOnSurfaceMuted
 import com.example.eventorias.ui.theme.EventoriasPrimary
@@ -285,7 +284,7 @@ private fun EventInputField(
   modifier: Modifier = Modifier,
   minLines: Int = 1
 ) {
-  OutlinedTextField(
+  TextField(
     value = value,
     onValueChange = onValueChange,
     label = { Text(label) },
@@ -306,8 +305,9 @@ private fun EventInputField(
       unfocusedTextColor = EventoriasOnSurface,
       focusedLabelColor = EventoriasOnSurfaceMuted,
       unfocusedLabelColor = EventoriasOnSurfaceMuted,
-      focusedIndicatorColor = EventoriasDivider,
-      unfocusedIndicatorColor = EventoriasDivider,
+      focusedIndicatorColor = Color.Transparent,
+      unfocusedIndicatorColor = Color.Transparent,
+      disabledIndicatorColor = Color.Transparent,
       cursorColor = EventoriasPrimary
     ),
     textStyle = MaterialTheme.typography.titleMedium,
@@ -347,11 +347,11 @@ private fun EventPickerField(
         verticalAlignment = Alignment.CenterVertically
       ) {
         val displayText = value.ifBlank { placeholder }
-        val displayColor = if (value.isBlank()) EventoriasOnSurfaceMuted else EventoriasOnSurface
+        val isPlaceholder = value.isBlank()
         Text(
           text = displayText,
-          style = MaterialTheme.typography.titleMedium,
-          color = displayColor,
+          style = if (isPlaceholder) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.titleMedium,
+          color = if (isPlaceholder) EventoriasOnSurfaceMuted else EventoriasOnSurface,
           modifier = Modifier.weight(1f)
         )
         Spacer(modifier = Modifier.width(8.dp))
