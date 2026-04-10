@@ -12,6 +12,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.eventorias.auth.AuthRoute
 import com.example.eventorias.auth.AuthViewModel
+import com.google.firebase.appcheck.FirebaseAppCheck
+import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
 import com.example.eventorias.ui.auth.EmailAuthScreen
 import com.example.eventorias.ui.auth.LoginScreen
 import com.example.eventorias.ui.events.EventsHomeScreen
@@ -20,6 +22,9 @@ import com.example.eventorias.ui.theme.EventoriasTheme
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    FirebaseAppCheck.getInstance().installAppCheckProviderFactory(
+      PlayIntegrityAppCheckProviderFactory.getInstance()
+    )
     enableEdgeToEdge(
       statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
       navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,6 +18,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -31,24 +34,37 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.eventorias.R
 import com.example.eventorias.auth.AuthUiState
+import com.example.eventorias.events.CreateEventEffect
+import com.example.eventorias.events.CreateEventViewModel
+import com.example.eventorias.events.Event
+import com.example.eventorias.events.EventsListUiState
+import com.example.eventorias.events.EventsListViewModel
 import com.example.eventorias.ui.components.EventoriasPrimaryButton
 import com.example.eventorias.ui.components.EventoriasSquareIconButton
 import com.example.eventorias.ui.theme.EventoriasBackground
@@ -60,6 +76,10 @@ import com.example.eventorias.ui.theme.EventoriasPrimary
 import com.example.eventorias.ui.theme.EventoriasSurface
 import com.example.eventorias.ui.theme.EventoriasSurfaceMuted
 import com.example.eventorias.ui.theme.EventoriasTheme
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 private enum class HomeTab {
   Events,
@@ -77,12 +97,32 @@ fun EventsHomeScreen(
   onSignOut: () -> Unit,
   onAddEventClick: () -> Unit = {}
 ) {
+  val createEventViewModel: CreateEventViewModel = viewModel()
+  val createEventUiState by createEventViewModel.uiState.collectAsState()
+  val eventsListViewModel: EventsListViewModel = viewModel()
+  val eventsListUiState by eventsListViewModel.uiState.collectAsState()
   var selectedTab by remember { mutableStateOf(HomeTab.Events) }
   var screenMode by remember { mutableStateOf(EventsScreenMode.Home) }
+  val snackbarHostState = remember { SnackbarHostState() }
+  val eventSavedMessage = stringResource(R.string.event_save_success)
+
+  LaunchedEffect(createEventViewModel) {
+    createEventViewModel.effects.collect { effect ->
+      when (effect) {
+        CreateEventEffect.EventSaved -> {
+          screenMode = EventsScreenMode.Home
+          snackbarHostState.showSnackbar(
+            message = eventSavedMessage
+          )
+        }
+      }
+    }
+  }
 
   Scaffold(
     contentWindowInsets = WindowInsets.safeDrawing,
     containerColor = EventoriasBackground,
+    snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     floatingActionButton = {
       if (screenMode == EventsScreenMode.Home && selectedTab == HomeTab.Events) {
         EventoriasSquareIconButton(
@@ -120,7 +160,16 @@ fun EventsHomeScreen(
     ) {
       if (screenMode == EventsScreenMode.CreateEvent) {
         CreateEventScreen(
-          onBack = { screenMode = EventsScreenMode.Home }
+          uiState = createEventUiState,
+          snackbarHostState = snackbarHostState,
+          onTitleChanged = createEventViewModel::updateTitle,
+          onDescriptionChanged = createEventViewModel::updateDescription,
+          onDateChanged = createEventViewModel::updateDate,
+          onTimeChanged = createEventViewModel::updateTime,
+          onAddressChanged = createEventViewModel::updateAddress,
+          onImageSelected = createEventViewModel::setSelectedImage,
+          onBack = { screenMode = EventsScreenMode.Home },
+          onValidate = createEventViewModel::saveEvent
         )
       } else {
         Column(
@@ -132,7 +181,7 @@ fun EventsHomeScreen(
         ) {
           HomeHeader(selectedTab = selectedTab)
           when (selectedTab) {
-            HomeTab.Events -> EventsTabContent()
+            HomeTab.Events -> EventsTabContent(eventsListUiState)
             HomeTab.Profile -> ProfileTabContent(
               uiState = uiState,
               onSignOut = onSignOut
@@ -145,46 +194,130 @@ fun EventsHomeScreen(
 }
 
 @Composable
-private fun EventsTabContent() {
-  Spacer(modifier = Modifier.height(24.dp))
+private fun EventsTabContent(uiState: EventsListUiState) {
+  Spacer(modifier = Modifier.height(16.dp))
 
-  Surface(
-    modifier = Modifier.fillMaxWidth(),
-    shape = RoundedCornerShape(24.dp),
-    color = EventoriasSurface
-  ) {
-    Column(
-      modifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = 24.dp, vertical = 28.dp),
-      horizontalAlignment = Alignment.CenterHorizontally
+  if (!uiState.isLoading && uiState.events.isEmpty()) {
+    Surface(
+      modifier = Modifier.fillMaxWidth(),
+      shape = RoundedCornerShape(24.dp),
+      color = EventoriasSurface
     ) {
-      Box(
+      Column(
         modifier = Modifier
-          .size(72.dp)
-          .background(EventoriasSurfaceMuted, CircleShape),
-        contentAlignment = Alignment.Center
+          .fillMaxWidth()
+          .padding(horizontal = 24.dp, vertical = 28.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
       ) {
-        Icon(
-          imageVector = Icons.Outlined.CalendarMonth,
-          contentDescription = null,
-          tint = EventoriasOnSurface,
-          modifier = Modifier.size(34.dp)
+        Box(
+          modifier = Modifier
+            .size(72.dp)
+            .background(EventoriasSurfaceMuted, CircleShape),
+          contentAlignment = Alignment.Center
+        ) {
+          Icon(
+            imageVector = Icons.Outlined.CalendarMonth,
+            contentDescription = null,
+            tint = EventoriasOnSurface,
+            modifier = Modifier.size(34.dp)
+          )
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(
+          text = stringResource(R.string.no_events_title),
+          style = MaterialTheme.typography.titleLarge,
+          color = EventoriasOnSurface,
+          textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        Text(
+          text = stringResource(R.string.no_events_message),
+          style = MaterialTheme.typography.bodyLarge,
+          color = EventoriasOnSurfaceMuted,
+          textAlign = TextAlign.Center
         )
       }
-      Spacer(modifier = Modifier.height(20.dp))
-      Text(
-        text = stringResource(R.string.no_events_title),
-        style = MaterialTheme.typography.titleLarge,
-        color = EventoriasOnSurface,
-        textAlign = TextAlign.Center
-      )
-      Spacer(modifier = Modifier.height(10.dp))
-      Text(
-        text = stringResource(R.string.no_events_message),
-        style = MaterialTheme.typography.bodyLarge,
-        color = EventoriasOnSurfaceMuted,
-        textAlign = TextAlign.Center
+    }
+  } else {
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+      items(uiState.events, key = { it.id }) { event ->
+        EventCard(event = event)
+      }
+    }
+  }
+}
+
+private val EVENT_DATE_FORMATTER = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.getDefault())
+
+@Composable
+private fun EventCard(event: Event) {
+  Surface(
+    modifier = Modifier
+      .fillMaxWidth()
+      .height(76.dp),
+    shape = RoundedCornerShape(12.dp),
+    color = EventoriasSurface
+  ) {
+    Row(modifier = Modifier.fillMaxSize()) {
+      Row(
+        modifier = Modifier
+          .weight(1f)
+          .fillMaxHeight()
+          .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+      ) {
+        if (event.ownerPhotoUrl != null) {
+          AsyncImage(
+            model = event.ownerPhotoUrl,
+            contentDescription = null,
+            modifier = Modifier
+              .size(44.dp)
+              .clip(CircleShape),
+            contentScale = ContentScale.Crop
+          )
+        } else {
+          Box(
+            modifier = Modifier
+              .size(44.dp)
+              .background(EventoriasSurfaceMuted, CircleShape),
+            contentAlignment = Alignment.Center
+          ) {
+            Icon(
+              imageVector = Icons.Outlined.PersonOutline,
+              contentDescription = null,
+              tint = EventoriasOnSurface,
+              modifier = Modifier.size(24.dp)
+            )
+          }
+        }
+        Column {
+          Text(
+            text = event.title,
+            style = MaterialTheme.typography.titleSmall,
+            color = EventoriasOnSurface,
+            maxLines = 1
+          )
+          Spacer(modifier = Modifier.height(4.dp))
+          val formattedDate = remember(event.eventAt) {
+            val instant = Instant.ofEpochSecond(event.eventAt.seconds)
+            val localDate = instant.atZone(ZoneId.systemDefault()).toLocalDate()
+            EVENT_DATE_FORMATTER.format(localDate)
+          }
+          Text(
+            text = formattedDate,
+            style = MaterialTheme.typography.bodySmall,
+            color = EventoriasOnSurfaceMuted
+          )
+        }
+      }
+      AsyncImage(
+        model = event.imageUrl,
+        contentDescription = null,
+        modifier = Modifier
+          .width(100.dp)
+          .fillMaxHeight(),
+        contentScale = ContentScale.Crop
       )
     }
   }
