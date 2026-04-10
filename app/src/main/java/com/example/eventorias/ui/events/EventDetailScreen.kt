@@ -280,7 +280,8 @@ fun EventDetailScreen(
           }
           GoogleMap(
             modifier = Modifier
-              .size(120.dp)
+              .width(170.dp)
+              .height(80.dp)
               .clip(RoundedCornerShape(8.dp)),
             cameraPositionState = cameraPositionState,
             uiSettings = MapUiSettings(
@@ -299,7 +300,8 @@ fun EventDetailScreen(
         } else {
           Box(
             modifier = Modifier
-              .size(120.dp)
+              .width(160.dp)
+              .height(90.dp)
               .background(EventoriasSurfaceMuted, RoundedCornerShape(8.dp))
           )
         }
