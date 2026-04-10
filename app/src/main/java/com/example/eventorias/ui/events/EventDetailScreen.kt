@@ -29,10 +29,21 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +61,7 @@ import com.example.eventorias.ui.theme.EventoriasOnSurfaceMuted
 import com.example.eventorias.ui.theme.EventoriasPrimary
 import com.example.eventorias.ui.theme.EventoriasSurface
 import com.example.eventorias.ui.theme.EventoriasSurfaceMuted
+import android.location.Geocoder
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -66,6 +78,20 @@ fun EventDetailScreen(
   onDelete: () -> Unit
 ) {
   var showDeleteDialog by remember { mutableStateOf(false) }
+  var markerPosition by remember { mutableStateOf<LatLng?>(null) }
+  val context = LocalContext.current
+
+  LaunchedEffect(event.address) {
+    withContext(Dispatchers.IO) {
+      try {
+        @Suppress("DEPRECATION")
+        val results = Geocoder(context, Locale.getDefault()).getFromLocationName(event.address, 1)
+        if (!results.isNullOrEmpty()) {
+          markerPosition = LatLng(results[0].latitude, results[0].longitude)
+        }
+      } catch (_: Exception) {}
+    }
+  }
 
   if (showDeleteDialog) {
     AlertDialog(
@@ -247,11 +273,36 @@ fun EventDetailScreen(
           modifier = Modifier.weight(1f)
         )
         Spacer(modifier = Modifier.width(16.dp))
-        Box(
-          modifier = Modifier
-            .size(90.dp)
-            .background(EventoriasSurfaceMuted, RoundedCornerShape(8.dp))
-        )
+        val position = markerPosition
+        if (position != null) {
+          val cameraPositionState = rememberCameraPositionState {
+            this.position = CameraPosition.fromLatLngZoom(position, 15f)
+          }
+          GoogleMap(
+            modifier = Modifier
+              .size(120.dp)
+              .clip(RoundedCornerShape(8.dp)),
+            cameraPositionState = cameraPositionState,
+            uiSettings = MapUiSettings(
+              scrollGesturesEnabled = false,
+              zoomGesturesEnabled = false,
+              tiltGesturesEnabled = false,
+              rotationGesturesEnabled = false,
+              zoomControlsEnabled = false,
+              mapToolbarEnabled = false,
+              compassEnabled = false,
+              myLocationButtonEnabled = false
+            )
+          ) {
+            Marker(state = MarkerState(position = position))
+          }
+        } else {
+          Box(
+            modifier = Modifier
+              .size(120.dp)
+              .background(EventoriasSurfaceMuted, RoundedCornerShape(8.dp))
+          )
+        }
       }
 
       Spacer(modifier = Modifier.height(24.dp))

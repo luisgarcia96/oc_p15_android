@@ -2,6 +2,7 @@ plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.google.services)
   alias(libs.plugins.kotlin.compose)
+  alias(libs.plugins.secrets)
 }
 
 android {
@@ -37,6 +38,11 @@ android {
   }
 }
 
+secrets {
+  propertiesFileName = "local.properties"
+  defaultPropertiesFileName = "local.defaults.properties"
+}
+
 dependencies {
   implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -56,6 +62,7 @@ dependencies {
   implementation(libs.firebase.auth)
   implementation(libs.firebase.firestore)
   implementation(libs.coil.compose)
+  implementation(libs.maps.compose)
   implementation(libs.firebase.appcheck.playintegrity)
   implementation(libs.firebase.storage)
   implementation(libs.googleid)
