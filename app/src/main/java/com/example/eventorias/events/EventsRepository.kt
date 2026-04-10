@@ -65,6 +65,11 @@ class EventsRepository(
     }
   }
 
+  suspend fun deleteEvent(eventId: String, imagePath: String) {
+    firestore.collection(EVENTS_COLLECTION).document(eventId).delete().awaitResult()
+    runCatching { storage.reference.child(imagePath).delete().awaitResult() }
+  }
+
   fun getEvents(): Flow<List<Event>> = callbackFlow {
     val listener = firestore.collection(EVENTS_COLLECTION)
       .orderBy("eventAt", Query.Direction.DESCENDING)

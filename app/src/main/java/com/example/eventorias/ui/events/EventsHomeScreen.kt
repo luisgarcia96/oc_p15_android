@@ -63,6 +63,7 @@ import com.example.eventorias.auth.AuthUiState
 import com.example.eventorias.events.CreateEventEffect
 import com.example.eventorias.events.CreateEventViewModel
 import com.example.eventorias.events.Event
+import com.example.eventorias.events.EventsListEffect
 import com.example.eventorias.events.EventsListUiState
 import com.example.eventorias.events.EventsListViewModel
 import com.example.eventorias.ui.components.EventoriasPrimaryButton
@@ -86,9 +87,10 @@ private enum class HomeTab {
   Profile
 }
 
-private enum class EventsScreenMode {
-  Home,
-  CreateEvent
+private sealed interface EventsScreenMode {
+  data object Home : EventsScreenMode
+  data object CreateEvent : EventsScreenMode
+  data class EventDetail(val event: Event) : EventsScreenMode
 }
 
 @Composable
@@ -102,7 +104,7 @@ fun EventsHomeScreen(
   val eventsListViewModel: EventsListViewModel = viewModel()
   val eventsListUiState by eventsListViewModel.uiState.collectAsState()
   var selectedTab by remember { mutableStateOf(HomeTab.Events) }
-  var screenMode by remember { mutableStateOf(EventsScreenMode.Home) }
+  var screenMode by remember { mutableStateOf<EventsScreenMode>(EventsScreenMode.Home) }
   val snackbarHostState = remember { SnackbarHostState() }
   val eventSavedMessage = stringResource(R.string.event_save_success)
 
@@ -111,10 +113,16 @@ fun EventsHomeScreen(
       when (effect) {
         CreateEventEffect.EventSaved -> {
           screenMode = EventsScreenMode.Home
-          snackbarHostState.showSnackbar(
-            message = eventSavedMessage
-          )
+          snackbarHostState.showSnackbar(message = eventSavedMessage)
         }
+      }
+    }
+  }
+
+  LaunchedEffect(eventsListViewModel) {
+    eventsListViewModel.effects.collect { effect ->
+      when (effect) {
+        EventsListEffect.EventDeleted -> screenMode = EventsScreenMode.Home
       }
     }
   }
@@ -124,7 +132,7 @@ fun EventsHomeScreen(
     containerColor = EventoriasBackground,
     snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     floatingActionButton = {
-      if (screenMode == EventsScreenMode.Home && selectedTab == HomeTab.Events) {
+      if (screenMode is EventsScreenMode.Home && selectedTab == HomeTab.Events) {
         EventoriasSquareIconButton(
           onClick = {
             onAddEventClick()
@@ -136,7 +144,7 @@ fun EventsHomeScreen(
       }
     },
     bottomBar = {
-      if (screenMode == EventsScreenMode.Home) {
+      if (screenMode is EventsScreenMode.Home) {
         HomeBottomBar(
           selectedTab = selectedTab,
           onSelectTab = { selectedTab = it }
@@ -158,8 +166,8 @@ fun EventsHomeScreen(
         )
         .padding(innerPadding)
     ) {
-      if (screenMode == EventsScreenMode.CreateEvent) {
-        CreateEventScreen(
+      when (val mode = screenMode) {
+        is EventsScreenMode.CreateEvent -> CreateEventScreen(
           uiState = createEventUiState,
           snackbarHostState = snackbarHostState,
           onTitleChanged = createEventViewModel::updateTitle,
@@ -171,8 +179,13 @@ fun EventsHomeScreen(
           onBack = { screenMode = EventsScreenMode.Home },
           onValidate = createEventViewModel::saveEvent
         )
-      } else {
-        Column(
+        is EventsScreenMode.EventDetail -> EventDetailScreen(
+          event = mode.event,
+          isDeleting = eventsListUiState.isDeleting,
+          onBack = { screenMode = EventsScreenMode.Home },
+          onDelete = { eventsListViewModel.deleteEvent(mode.event) }
+        )
+        is EventsScreenMode.Home -> Column(
           modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
@@ -181,7 +194,10 @@ fun EventsHomeScreen(
         ) {
           HomeHeader(selectedTab = selectedTab)
           when (selectedTab) {
-            HomeTab.Events -> EventsTabContent(eventsListUiState)
+            HomeTab.Events -> EventsTabContent(
+              uiState = eventsListUiState,
+              onEventClick = { event -> screenMode = EventsScreenMode.EventDetail(event) }
+            )
             HomeTab.Profile -> ProfileTabContent(
               uiState = uiState,
               onSignOut = onSignOut
@@ -194,7 +210,7 @@ fun EventsHomeScreen(
 }
 
 @Composable
-private fun EventsTabContent(uiState: EventsListUiState) {
+private fun EventsTabContent(uiState: EventsListUiState, onEventClick: (Event) -> Unit) {
   Spacer(modifier = Modifier.height(16.dp))
 
   if (!uiState.isLoading && uiState.events.isEmpty()) {
@@ -241,7 +257,7 @@ private fun EventsTabContent(uiState: EventsListUiState) {
   } else {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
       items(uiState.events, key = { it.id }) { event ->
-        EventCard(event = event)
+        EventCard(event = event, onClick = { onEventClick(event) })
       }
     }
   }
@@ -250,11 +266,12 @@ private fun EventsTabContent(uiState: EventsListUiState) {
 private val EVENT_DATE_FORMATTER = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.getDefault())
 
 @Composable
-private fun EventCard(event: Event) {
+private fun EventCard(event: Event, onClick: () -> Unit) {
   Surface(
     modifier = Modifier
       .fillMaxWidth()
-      .height(76.dp),
+      .height(76.dp)
+      .clickable(onClick = onClick),
     shape = RoundedCornerShape(12.dp),
     color = EventoriasSurface
   ) {
