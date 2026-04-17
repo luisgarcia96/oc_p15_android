@@ -61,6 +61,7 @@ dependencies {
   implementation(libs.firebase.analytics)
   implementation(libs.firebase.auth)
   implementation(libs.firebase.firestore)
+  implementation(libs.firebase.messaging)
   implementation(libs.coil.compose)
   implementation(libs.maps.compose)
   implementation(libs.firebase.appcheck.playintegrity)

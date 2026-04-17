@@ -104,6 +104,8 @@ private sealed interface EventsScreenMode {
 fun EventsHomeScreen(
   uiState: AuthUiState,
   onSignOut: () -> Unit,
+  notificationsEnabled: Boolean,
+  onNotificationsToggle: (Boolean) -> Unit,
   onAddEventClick: () -> Unit = {}
 ) {
   val createEventViewModel: CreateEventViewModel = viewModel()
@@ -210,7 +212,9 @@ fun EventsHomeScreen(
             )
             HomeTab.Profile -> ProfileTabContent(
               uiState = uiState,
-              onSignOut = onSignOut
+              onSignOut = onSignOut,
+              notificationsEnabled = notificationsEnabled,
+              onNotificationsToggle = onNotificationsToggle
             )
           }
         }
@@ -357,11 +361,12 @@ private fun EventCard(event: Event, onClick: () -> Unit) {
 @Composable
 private fun ProfileTabContent(
   uiState: AuthUiState,
-  onSignOut: () -> Unit
+  onSignOut: () -> Unit,
+  notificationsEnabled: Boolean,
+  onNotificationsToggle: (Boolean) -> Unit
 ) {
   val displayName = uiState.currentUser?.displayName.orEmpty()
   val email = uiState.currentUser?.email.orEmpty()
-  var notificationsEnabled by remember { mutableStateOf(true) }
 
   Spacer(modifier = Modifier.height(24.dp))
 
@@ -386,7 +391,7 @@ private fun ProfileTabContent(
       ) {
         Switch(
           checked = notificationsEnabled,
-          onCheckedChange = { notificationsEnabled = it },
+          onCheckedChange = onNotificationsToggle,
           colors = SwitchDefaults.colors(
             checkedTrackColor = EventoriasPrimary,
             checkedThumbColor = Color.White
@@ -566,7 +571,9 @@ private fun EventsHomeScreenPreview() {
   EventoriasTheme {
     EventsHomeScreen(
       uiState = AuthUiState(),
-      onSignOut = {}
+      onSignOut = {},
+      notificationsEnabled = true,
+      onNotificationsToggle = {}
     )
   }
 }
