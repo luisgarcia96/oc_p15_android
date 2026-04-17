@@ -65,4 +65,15 @@
     <string name="profile_placeholder_user">Your account</string>
     <string name="sign_out_cta">Sign out</string>
     <string name="event_delete_cta">Delete event</string>
+    <string name="email_auth_firebase_description">Use Firebase Authentication with email and password.</string>
+    <string name="authentication_issue">Authentication issue</string>
+    <string name="delete_event_title">Delete event</string>
+    <string name="delete_event_message">Are you sure you want to delete this event? This action cannot be undone.</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="event_image_description">Photo for event %1$s</string>
+    <string name="event_owner_photo">Event organizer photo</string>
+    <string name="profile_photo">Profile photo</string>
+    <string name="map_preview_description">Map preview of %1$s</string>
+    <string name="no_events_empty_icon">No events</string>
 </resources>

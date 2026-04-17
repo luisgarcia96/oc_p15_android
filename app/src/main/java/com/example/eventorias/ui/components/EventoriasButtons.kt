@@ -14,6 +14,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.material3.Icon
@@ -35,8 +38,18 @@ fun EventoriasPrimaryButton(
   enabled: Boolean = true,
   loading: Boolean = false
 ) {
+  val interactive = enabled && !loading
   Surface(
-    modifier = modifier.clickable(enabled = enabled && !loading, onClick = onClick),
+    modifier = modifier
+      .clickable(
+        enabled = interactive,
+        onClickLabel = text,
+        role = Role.Button,
+        onClick = onClick
+      )
+      .semantics(mergeDescendants = true) {
+        if (!interactive) disabled()
+      },
     shape = RoundedCornerShape(4.dp),
     color = if (enabled) EventoriasPrimary else EventoriasPrimary.copy(alpha = 0.45f)
   ) {
@@ -75,7 +88,16 @@ fun EventoriasSquareIconButton(
   content: (@Composable BoxScope.() -> Unit)? = null
 ) {
   Surface(
-    modifier = modifier.clickable(enabled = enabled, onClick = onClick),
+    modifier = modifier
+      .clickable(
+        enabled = enabled,
+        onClickLabel = contentDescription,
+        role = Role.Button,
+        onClick = onClick
+      )
+      .semantics(mergeDescendants = true) {
+        if (!enabled) disabled()
+      },
     shape = RoundedCornerShape(SquareButtonRadius),
     color = if (enabled) containerColor else containerColor.copy(alpha = 0.45f)
   ) {

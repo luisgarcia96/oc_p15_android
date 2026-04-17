@@ -49,6 +49,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -99,14 +101,14 @@ fun EventDetailScreen(
       containerColor = EventoriasSurface,
       title = {
         Text(
-          text = "Delete event",
+          text = stringResource(R.string.delete_event_title),
           style = MaterialTheme.typography.titleLarge,
           color = EventoriasOnSurface
         )
       },
       text = {
         Text(
-          text = "Are you sure you want to delete this event? This action cannot be undone.",
+          text = stringResource(R.string.delete_event_message),
           style = MaterialTheme.typography.bodyMedium,
           color = EventoriasOnSurfaceMuted
         )
@@ -116,12 +118,12 @@ fun EventDetailScreen(
           showDeleteDialog = false
           onDelete()
         }) {
-          Text("Delete", color = EventoriasPrimary)
+          Text(stringResource(R.string.delete), color = EventoriasPrimary)
         }
       },
       dismissButton = {
         TextButton(onClick = { showDeleteDialog = false }) {
-          Text("Cancel", color = EventoriasOnSurface)
+          Text(stringResource(R.string.cancel), color = EventoriasOnSurface)
         }
       }
     )
@@ -172,7 +174,7 @@ fun EventDetailScreen(
       // Cover image
       AsyncImage(
         model = event.imageUrl,
-        contentDescription = null,
+        contentDescription = stringResource(R.string.event_image_description, event.title),
         modifier = Modifier
           .fillMaxWidth()
           .padding(horizontal = 20.dp)
@@ -224,7 +226,7 @@ fun EventDetailScreen(
         if (event.ownerPhotoUrl != null) {
           AsyncImage(
             model = event.ownerPhotoUrl,
-            contentDescription = null,
+            contentDescription = stringResource(R.string.event_owner_photo),
             modifier = Modifier
               .size(56.dp)
               .clip(CircleShape),
@@ -239,7 +241,7 @@ fun EventDetailScreen(
           ) {
             Icon(
               imageVector = Icons.Outlined.PersonOutline,
-              contentDescription = null,
+              contentDescription = stringResource(R.string.event_owner_photo),
               tint = EventoriasOnSurface,
               modifier = Modifier.size(28.dp)
             )
@@ -274,6 +276,7 @@ fun EventDetailScreen(
         )
         Spacer(modifier = Modifier.width(16.dp))
         val position = markerPosition
+        val mapDescription = stringResource(R.string.map_preview_description, event.address)
         if (position != null) {
           val cameraPositionState = rememberCameraPositionState {
             this.position = CameraPosition.fromLatLngZoom(position, 15f)
@@ -282,7 +285,10 @@ fun EventDetailScreen(
             modifier = Modifier
               .width(170.dp)
               .height(80.dp)
-              .clip(RoundedCornerShape(8.dp)),
+              .clip(RoundedCornerShape(8.dp))
+              .semantics(mergeDescendants = true) {
+                contentDescription = mapDescription
+              },
             cameraPositionState = cameraPositionState,
             uiSettings = MapUiSettings(
               scrollGesturesEnabled = false,

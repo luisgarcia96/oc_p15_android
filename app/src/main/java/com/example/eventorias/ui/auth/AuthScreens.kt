@@ -48,6 +48,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -129,20 +136,22 @@ fun EmailAuthScreen(
       ) {
         Icon(
           imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-          contentDescription = "Back"
+          contentDescription = stringResource(R.string.back)
         )
       }
 
       Spacer(modifier = Modifier.height(24.dp))
 
       Text(
-        text = if (isSignIn) "Sign in with email" else "Create your account",
+        text = stringResource(
+          if (isSignIn) R.string.email_sign_in_title else R.string.email_sign_up_title
+        ),
         style = MaterialTheme.typography.headlineMedium,
         color = EventoriasOnSurface
       )
       Spacer(modifier = Modifier.height(8.dp))
       Text(
-        text = "Use Firebase Authentication with email and password.",
+        text = stringResource(R.string.email_auth_firebase_description),
         style = MaterialTheme.typography.bodyLarge,
         color = EventoriasOnSurfaceMuted
       )
@@ -159,16 +168,16 @@ fun EmailAuthScreen(
       AuthTextField(
         value = uiState.email,
         onValueChange = onEmailChanged,
-        label = "Email",
-        placeholder = "you@example.com",
+        label = stringResource(R.string.email_label),
+        placeholder = stringResource(R.string.email_placeholder),
         keyboardType = KeyboardType.Email
       )
       Spacer(modifier = Modifier.height(16.dp))
       AuthTextField(
         value = uiState.password,
         onValueChange = onPasswordChanged,
-        label = "Password",
-        placeholder = "At least 6 characters",
+        label = stringResource(R.string.password_label),
+        placeholder = stringResource(R.string.password_placeholder),
         keyboardType = KeyboardType.Password,
         isPassword = true
       )
@@ -198,7 +207,7 @@ fun EmailAuthScreen(
           )
         } else {
           Text(
-            text = if (isSignIn) "Sign in" else "Create account",
+            text = stringResource(if (isSignIn) R.string.sign_in else R.string.create_account),
             style = MaterialTheme.typography.labelLarge
           )
         }
@@ -212,11 +221,9 @@ fun EmailAuthScreen(
         modifier = Modifier.align(Alignment.CenterHorizontally)
       ) {
         Text(
-          text = if (isSignIn) {
-            "Need an account? Create one"
-          } else {
-            "Already have an account? Sign in"
-          },
+          text = stringResource(
+            if (isSignIn) R.string.switch_to_sign_up else R.string.switch_to_sign_in
+          ),
           color = EventoriasOnSurface
         )
       }
@@ -231,7 +238,9 @@ fun SignedInScreen(
   uiState: AuthUiState,
   onSignOut: () -> Unit
 ) {
-  val userLabel = uiState.currentUser?.email ?: uiState.currentUser?.displayName ?: "Signed in with Google"
+  val userLabel = uiState.currentUser?.email
+    ?: uiState.currentUser?.displayName
+    ?: stringResource(R.string.signed_out_user)
 
   AuthScaffold {
     Column(
@@ -254,7 +263,7 @@ fun SignedInScreen(
           horizontalAlignment = Alignment.CenterHorizontally
         ) {
           Text(
-            text = "You are signed in",
+            text = stringResource(R.string.signed_in_title),
             style = MaterialTheme.typography.headlineMedium,
             color = EventoriasOnSurface,
             textAlign = TextAlign.Center
@@ -286,7 +295,10 @@ fun SignedInScreen(
                 color = EventoriasOnPrimary
               )
             } else {
-              Text("Sign out", style = MaterialTheme.typography.labelLarge)
+              Text(
+                text = stringResource(R.string.sign_out),
+                style = MaterialTheme.typography.labelLarge
+              )
             }
           }
         }
@@ -425,7 +437,7 @@ private fun ModeToggle(
     horizontalArrangement = Arrangement.spacedBy(6.dp)
   ) {
     ModeOption(
-      text = "Sign in",
+      text = stringResource(R.string.email_auth_mode_sign_in),
       selected = isSignIn,
       enabled = enabled,
       onClick = { if (!isSignIn) onToggleMode() },
@@ -433,7 +445,7 @@ private fun ModeToggle(
       interactionSource = interactionSource
     )
     ModeOption(
-      text = "Create account",
+      text = stringResource(R.string.email_auth_mode_sign_up),
       selected = !isSignIn,
       enabled = enabled,
       onClick = { if (isSignIn) onToggleMode() },
@@ -460,8 +472,12 @@ private fun ModeOption(
         enabled = enabled,
         interactionSource = interactionSource,
         indication = null,
+        role = Role.Tab,
         onClick = onClick
       )
+      .semantics(mergeDescendants = true) {
+        this.selected = selected
+      }
       .padding(vertical = 14.dp),
     contentAlignment = Alignment.Center
   ) {
@@ -527,11 +543,15 @@ private fun AuthError(
   Surface(
     color = EventoriasPrimary.copy(alpha = 0.12f),
     shape = RoundedCornerShape(4.dp),
-    modifier = Modifier.fillMaxWidth()
+    modifier = Modifier
+      .fillMaxWidth()
+      .semantics(mergeDescendants = true) {
+        liveRegion = LiveRegionMode.Assertive
+      }
   ) {
     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
       Text(
-        text = "Authentication issue",
+        text = stringResource(R.string.authentication_issue),
         style = MaterialTheme.typography.titleMedium,
         color = EventoriasOnSurface
       )

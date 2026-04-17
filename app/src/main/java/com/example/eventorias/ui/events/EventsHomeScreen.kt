@@ -56,6 +56,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -273,11 +277,20 @@ private val EVENT_DATE_FORMATTER = DateTimeFormatter.ofPattern("MMMM d, yyyy", L
 
 @Composable
 private fun EventCard(event: Event, onClick: () -> Unit) {
+  val formattedDate = remember(event.eventAt) {
+    val instant = Instant.ofEpochSecond(event.eventAt.seconds)
+    val localDate = instant.atZone(ZoneId.systemDefault()).toLocalDate()
+    EVENT_DATE_FORMATTER.format(localDate)
+  }
+  val cardLabel = "${event.title}, $formattedDate"
   Surface(
     modifier = Modifier
       .fillMaxWidth()
       .height(76.dp)
-      .clickable(onClick = onClick),
+      .clickable(onClickLabel = event.title, role = Role.Button, onClick = onClick)
+      .semantics(mergeDescendants = true) {
+        contentDescription = cardLabel
+      },
     shape = RoundedCornerShape(12.dp),
     color = EventoriasSurface
   ) {
@@ -322,11 +335,6 @@ private fun EventCard(event: Event, onClick: () -> Unit) {
             maxLines = 1
           )
           Spacer(modifier = Modifier.height(4.dp))
-          val formattedDate = remember(event.eventAt) {
-            val instant = Instant.ofEpochSecond(event.eventAt.seconds)
-            val localDate = instant.atZone(ZoneId.systemDefault()).toLocalDate()
-            EVENT_DATE_FORMATTER.format(localDate)
-          }
           Text(
             text = formattedDate,
             style = MaterialTheme.typography.bodySmall,
@@ -361,6 +369,7 @@ private fun ProfileTabContent(
     ProfileInfoField(label = stringResource(R.string.profile_field_name), value = displayName, enabled = false)
     ProfileInfoField(label = stringResource(R.string.profile_field_email), value = email, enabled = false)
 
+    val notificationsLabel = stringResource(R.string.profile_notifications)
     Surface(
       modifier = Modifier.fillMaxWidth(),
       shape = RoundedCornerShape(4.dp),
@@ -369,7 +378,10 @@ private fun ProfileTabContent(
       Row(
         modifier = Modifier
           .fillMaxWidth()
-          .padding(horizontal = 16.dp, vertical = 12.dp),
+          .padding(horizontal = 16.dp, vertical = 12.dp)
+          .semantics(mergeDescendants = true) {
+            contentDescription = notificationsLabel
+          },
         verticalAlignment = Alignment.CenterVertically
       ) {
         Switch(
@@ -382,7 +394,7 @@ private fun ProfileTabContent(
         )
         Spacer(modifier = Modifier.width(16.dp))
         Text(
-          text = stringResource(R.string.profile_notifications),
+          text = notificationsLabel,
           style = MaterialTheme.typography.bodyLarge,
           color = EventoriasOnSurface
         )
@@ -445,26 +457,11 @@ private fun HomeHeader(
       contentAlignment = Alignment.CenterEnd
     ) {
       when (selectedTab) {
-        HomeTab.Events -> Row(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
-          IconButton(onClick = {}) {
-            Icon(
-              imageVector = Icons.Outlined.Search,
-              contentDescription = stringResource(R.string.search_events),
-              tint = EventoriasOnSurface
-            )
-          }
-          IconButton(onClick = {}) {
-            Icon(
-              imageVector = Icons.Outlined.SwapVert,
-              contentDescription = stringResource(R.string.sort_events),
-              tint = EventoriasOnSurface
-            )
-          }
-        }
+        HomeTab.Events -> Unit
         HomeTab.Profile -> if (photoUrl != null) {
           AsyncImage(
             model = photoUrl,
-            contentDescription = null,
+            contentDescription = stringResource(R.string.profile_photo),
             modifier = Modifier.size(44.dp).clip(CircleShape),
             contentScale = ContentScale.Crop
           )
@@ -475,7 +472,7 @@ private fun HomeHeader(
           ) {
             Icon(
               imageVector = Icons.Outlined.AccountCircle,
-              contentDescription = null,
+              contentDescription = stringResource(R.string.profile_placeholder_user),
               tint = EventoriasOnSurface,
               modifier = Modifier.size(28.dp)
             )
@@ -527,7 +524,12 @@ private fun BottomNavItem(
   label: String
 ) {
   Column(
-    modifier = Modifier.clickable(onClick = onClick),
+    modifier = Modifier
+      .clickable(onClickLabel = label, role = Role.Tab, onClick = onClick)
+      .semantics(mergeDescendants = true) {
+        this.selected = selected
+        contentDescription = label
+      },
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
     Surface(
@@ -542,7 +544,7 @@ private fun BottomNavItem(
       ) {
         Icon(
           imageVector = icon,
-          contentDescription = label,
+          contentDescription = null,
           tint = EventoriasOnSurface
         )
       }
