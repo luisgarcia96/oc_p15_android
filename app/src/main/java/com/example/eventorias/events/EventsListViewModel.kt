@@ -25,7 +25,9 @@ sealed interface EventsListEffect {
 }
 
 class EventsListViewModel(application: Application) : AndroidViewModel(application) {
-  private val repository = EventsRepository(application.applicationContext)
+  private val appContext = application.applicationContext
+  private val repository = EventsRepository(appContext)
+  private val reminderScheduler = EventReminderScheduler(appContext)
 
   private val _uiState = MutableStateFlow(EventsListUiState())
   val uiState: StateFlow<EventsListUiState> = _uiState.asStateFlow()
@@ -52,6 +54,7 @@ class EventsListViewModel(application: Application) : AndroidViewModel(applicati
       runCatching {
         repository.deleteEvent(event.id, event.imagePath)
       }.onSuccess {
+        reminderScheduler.cancelReminder(event.id)
         _uiState.update { it.copy(isDeleting = false) }
         _effects.tryEmit(EventsListEffect.EventDeleted)
       }.onFailure {

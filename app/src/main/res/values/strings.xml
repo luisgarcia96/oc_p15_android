@@ -70,6 +70,10 @@
     <string name="notification_channel_description">Alerts and updates for your events</string>
     <string name="notification_default_title">Eventorias</string>
     <string name="notification_default_body">You have a new update.</string>
+    <string name="event_reminder_title">Event tomorrow</string>
+    <string name="event_reminder_body">Your event "%1$s" starts in 24 hours.</string>
+    <string name="event_start_title">Event starts now</string>
+    <string name="event_start_body">Your event "%1$s" is starting now.</string>
     <string name="email_auth_firebase_description">Use Firebase Authentication with email and password.</string>
     <string name="authentication_issue">Authentication issue</string>
     <string name="delete_event_title">Delete event</string>

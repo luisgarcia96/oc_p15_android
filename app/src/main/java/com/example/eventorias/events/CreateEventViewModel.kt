@@ -8,6 +8,7 @@ import com.example.eventorias.R
 import com.google.firebase.auth.FirebaseAuth
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import kotlinx.coroutines.channels.BufferOverflow
@@ -41,6 +42,7 @@ class CreateEventViewModel(
 ) : AndroidViewModel(application) {
   private val appContext = application.applicationContext
   private val repository = EventsRepository(appContext)
+  private val reminderScheduler = EventReminderScheduler(appContext)
   private val auth = FirebaseAuth.getInstance()
 
   private val mutableUiState = MutableStateFlow(
@@ -106,7 +108,12 @@ class CreateEventViewModel(
             imageUri = currentState.imageUri
           )
         )
-      }.onSuccess {
+      }.onSuccess { eventId ->
+        reminderScheduler.scheduleReminder(
+          eventId = eventId,
+          eventTitle = currentState.title.trim(),
+          eventAtMillis = parseEventAtMillis(currentState.date, currentState.time)
+        )
         resetForm()
         mutableEffects.tryEmit(CreateEventEffect.EventSaved)
       }.onFailure { throwable ->
@@ -170,6 +177,16 @@ class CreateEventViewModel(
     } else {
       appContext.getString(R.string.event_photo_selected_named, name)
     }
+  }
+
+  private fun parseEventAtMillis(date: String, time: String): Long {
+    val parsedDate = LocalDate.parse(date.trim(), DATE_FORMATTER)
+    val parsedTime = LocalTime.parse(time.trim().replace(" ", ""), TIME_FORMATTER)
+    return parsedDate
+      .atTime(parsedTime)
+      .atZone(ZoneId.systemDefault())
+      .toInstant()
+      .toEpochMilli()
   }
 
   companion object {
