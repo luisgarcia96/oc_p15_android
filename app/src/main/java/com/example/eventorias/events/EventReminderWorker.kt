@@ -1,5 +1,6 @@
 package com.example.eventorias.events
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -15,6 +16,7 @@ class EventReminderWorker(
   appContext: Context,
   workerParams: WorkerParameters
 ) : CoroutineWorker(appContext, workerParams) {
+  @SuppressLint("MissingPermission")
   override suspend fun doWork(): Result {
     val eventId = inputData.getString(KEY_EVENT_ID) ?: return Result.failure()
     val eventTitle = inputData.getString(KEY_EVENT_TITLE) ?: return Result.failure()

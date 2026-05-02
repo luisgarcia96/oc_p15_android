@@ -1,5 +1,6 @@
 package com.example.eventorias.notifications
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Intent
 import android.util.Log
@@ -15,6 +16,7 @@ class EventoriasMessagingService : FirebaseMessagingService() {
     Log.d(TAG, "FCM token refreshed: $token")
   }
 
+  @SuppressLint("MissingPermission")
   override fun onMessageReceived(remoteMessage: RemoteMessage) {
     NotificationHelper.createDefaultChannel(this)
 
